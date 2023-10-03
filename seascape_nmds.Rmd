@@ -1,0 +1,48 @@
+---
+title: "seascape_nmds"
+output: html_document
+date: "2023-10-03"
+---
+
+```{r setup, include=FALSE}
+# Load the required packages
+library(vegan)
+library(dplyr)
+
+# load data tables
+setwd("~/enriquemontes01@gmail.com - Google Drive/My Drive/GDrive/meetings/2023_10_GEOBON_Montreal/csv/")
+temp = list.files(pattern="\\.csv$")
+for (file in 1:length(temp)) {
+  table_name <- gsub(".csv", "", basename(file)) # get the name of the table from the file name
+  assign(temp[i], read.csv(temp[i]))
+}
+
+# Combine the data frames into one
+combined_data <- rbind(sscp_meow183.csv, sscp_meow184.csv, sscp_meow185.csv)
+
+# Step 2: Perform NMDS analysis
+# Assuming you want to perform NMDS with 2 dimensions (k = 2)
+nmds_result <- metaMDS(combined_data[, -1], distance = "bray")
+
+# Step 3: Visualize the NMDS results
+plot(nmds_result)
+
+# Create a data frame with the NMDS results and region type
+nmds_data <- data.frame(
+  NMDS1 = nmds_result$points[, 1],
+  NMDS2 = nmds_result$points[, 2],
+  Region = combined_data$Region  # Assuming 'combined_data' contains region type information
+)
+
+# Load the ggplot2 library for creating plots
+library(ggplot2)
+
+# Create the NMDS plot with color-coded points
+ggplot(nmds_data, aes(x = NMDS1, y = NMDS2, color = Region)) +
+  geom_point() +
+  labs(x = "NMDS1", y = "NMDS2") +
+  scale_color_manual(values = c("A" = "red", "B" = "blue", "C" = "green")) +  # Customize colors
+  theme_minimal()
+
+```
+
