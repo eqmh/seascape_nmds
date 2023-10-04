@@ -40,7 +40,7 @@ combined_data <- combined_data %>%
   mutate(date = as.Date(date))
 
 # Filter combined_data by selected months
-selected_months <- c("07", "08", "09")  # January, February, March
+selected_months <- c("01", "02", "03")  # January, February, March
 
 filtered_data <- combined_data %>%
   filter(format(date, "%m") %in% selected_months)
@@ -68,18 +68,22 @@ nmds_data <- data.frame(
 #   theme_minimal()
 
 # Create a 2D scatterplot using plotly
-nmds_plot_2d <- plot_ly(data = nmds_data, x = ~NMDS1, y = ~NMDS2, color = ~Region, type = "scatter") %>%
+
+# Crea una paleta de colores personalizada
+mi_paleta <- c("gray", "orange", "brown")
+
+nmds_plot_2d <- plot_ly(data = nmds_data, x = ~NMDS1, y = ~NMDS2, color = ~Region, type = "scatter", colors = mi_paleta) %>%
   add_markers(size = 5, text = ~Region, showlegend = FALSE) %>%
   layout(scene = list(
     xaxis = list(
       title = "NMDS1",
-      tickfont = list(size = 20),
-      titlefont = list(size = 40)
+      tickfont = list(size = 18),
+      titlefont = list(size = 18)
     ),
     yaxis = list(
       title = "NMDS2",
-      tickfont = list(size = 20),
-      titlefont = list(size = 24)
+      tickfont = list(size = 18),
+      titlefont = list(size = 18)
     )
   ))
 
