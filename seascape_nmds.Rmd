@@ -8,21 +8,46 @@ date: "2023-10-03"
 # Load the required packages
 library(vegan)
 library(dplyr)
+library(ggplot2)
+library(plotly)
 
-# load data tables
-setwd("~/enriquemontes01@gmail.com - Google Drive/My Drive/GDrive/meetings/2023_10_GEOBON_Montreal/csv/")
-temp = list.files(pattern="\\.csv$")
-for (file in 1:length(temp)) {
-  table_name <- gsub(".csv", "", basename(file)) # get the name of the table from the file name
-  assign(temp[i], read.csv(temp[i]))
+# Define the directory path
+directory_path <- "/Users/enrique.montes/Library/CloudStorage/GoogleDrive-enriquemontes01@gmail.com/My Drive/GDrive/meetings/2023_10_GEOBON_Montreal/csv/"
+
+# List of CSV file names
+csv_files <- list.files(path = directory_path, pattern = ".csv", full.names = TRUE)
+
+# Initialize an empty list to store data frames
+data_frames_list <- list()
+
+# Loop through each CSV file
+for (csv_file in csv_files) {
+  # Extract the file name without extension
+  file_name <- tools::file_path_sans_ext(basename(csv_file))
+  
+  # Read the CSV file and store it as a data frame with the corresponding file name
+  data_frame <- read.csv(csv_file)
+  
+  # Add the data frame to the list
+  data_frames_list[[file_name]] <- data_frame
 }
 
 # Combine the data frames into one
-combined_data <- rbind(sscp_meow183.csv, sscp_meow184.csv, sscp_meow185.csv)
+combined_data <- bind_rows(data_frames_list)
 
+# Convert 'date' to Date class
+combined_data <- combined_data %>%
+  mutate(date = as.Date(date))
+
+# Filter combined_data by selected months
+selected_months <- c("07", "08", "09")  # January, February, March
+
+filtered_data <- combined_data %>%
+  filter(format(date, "%m") %in% selected_months)
+  
 # Step 2: Perform NMDS analysis
 # Assuming you want to perform NMDS with 2 dimensions (k = 2)
-nmds_result <- metaMDS(combined_data[, -1], distance = "bray")
+nmds_result <- metaMDS(filtered_data[, -c(1, 2)], distance = "bray", k = 3)
 
 # Step 3: Visualize the NMDS results
 plot(nmds_result)
@@ -31,18 +56,40 @@ plot(nmds_result)
 nmds_data <- data.frame(
   NMDS1 = nmds_result$points[, 1],
   NMDS2 = nmds_result$points[, 2],
-  Region = combined_data$Region  # Assuming 'combined_data' contains region type information
+  NMDS3 = nmds_result$points[, 3],
+  Region = filtered_data$region  # Assuming 'combined_data' contains region type information
 )
 
-# Load the ggplot2 library for creating plots
-library(ggplot2)
+# # Create the NMDS plot with color-coded points
+# nmds_plot_2d <- ggplot(nmds_data, aes(x = NMDS1, y = NMDS2, color = Region)) +
+#   geom_point(size = 4) + 
+#   labs(x = "NMDS1", y = "NMDS2") +
+#   scale_color_manual(values = c("uruguayan-buenos_aires" = "red", "north_patagonian_gulfs" = "blue", "patagonia_shelf" = "green")) +  # Customize colors
+#   theme_minimal()
 
-# Create the NMDS plot with color-coded points
-ggplot(nmds_data, aes(x = NMDS1, y = NMDS2, color = Region)) +
-  geom_point() +
-  labs(x = "NMDS1", y = "NMDS2") +
-  scale_color_manual(values = c("A" = "red", "B" = "blue", "C" = "green")) +  # Customize colors
-  theme_minimal()
+# Create a 2D scatterplot using plotly
+nmds_plot_2d <- plot_ly(data = nmds_data, x = ~NMDS1, y = ~NMDS2, color = ~Region, type = "scatter") %>%
+  add_markers(size = 5, text = ~Region, showlegend = FALSE) %>%
+  layout(scene = list(
+    xaxis = list(
+      title = "NMDS1",
+      tickfont = list(size = 20),
+      titlefont = list(size = 40)
+    ),
+    yaxis = list(
+      title = "NMDS2",
+      tickfont = list(size = 20),
+      titlefont = list(size = 24)
+    )
+  ))
+
+# # Create a 3D scatterplot using plotly
+# nmds_plot_3d <- plot_ly(data = nmds_data, x = ~NMDS1, y = ~NMDS2, z = ~NMDS3, color = ~Region, type = "scatter3d") %>%
+#   add_markers(size = 5, text = ~Region, showlegend = FALSE) %>%
+#   layout(scene = list(xaxis = list(title = "NMDS1"),
+#                       yaxis = list(title = "NMDS2"),
+#                       zaxis = list(title = "NMDS3"))) %>%
+#   colorbar(title = "Region")
 
 ```
 
